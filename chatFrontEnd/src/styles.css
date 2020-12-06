@@ -1,0 +1,93 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Nerko+One&family=Nunito+Sans:ital,wght@0,200;0,300;0,400;1,200&display=swap');
+
+.botResponseCss{
+    min-height: 30px;
+    width: fit-content;
+    border: 1px solid #9DC88D;
+    float: left;
+    margin-left: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    border-top-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-family: 'Nunito Sans', sans-serif;
+    color: #9DC88D;
+}
+.userResponseCss{
+    height: 30px;
+    width: fit-content;
+    border: 1px solid #C3073F ;
+    color: #C3073F;
+    float: right;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    border-top-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-family: 'Nunito Sans', sans-serif;
+}
+.userIcon{
+    padding-left: 10px;
+    float:right;
+    margin-right: 20px;
+}
+.botIcon{
+    padding-left: 10px;
+    margin-left: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+    width: fit-content;
+    height: 32px;
+}
+.botResponseOption{
+    min-height: 30px;
+    width: fit-content;
+    background-color: #4EB1BA;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    border-top-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-family: 'Nunito Sans', sans-serif;
+    border: none;
+    outline:none;
+}
+#container{
+    display: flex;
+    flex-direction: column;
+}
+#imgdiv{
+    width: 400px;
+    height: 32px;
+}
+#chatdiv{
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    margin-top: 30px;
+}
+#userchatdiv{
+    float: right;
+    width: 600px;
+}
+#maindiv{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+}
+.card{
+    margin-left: 20px;
+    padding: 10px;
+    background-color: rgba(250, 219, 84, 0.993);
+    width: 200px;
+    border-radius: 20px;
+    font-family: 'Nunito Sans', sans-serif;
+}
+.cardImg{
+    margin-left: 60px
+}
