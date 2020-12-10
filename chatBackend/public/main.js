@@ -22,8 +22,17 @@ class ChatComponent {
         this.question = "greeting";
         this.welcome = true;
         //pizza and user detail variable
+        this.bookingOrder = false;
+        this.HowManyPizza = false;
+        this.NoOfPizza = 0;
         this.pizzaList = false;
+        this.cheeseName = "Not added";
+        this.crustName = "Not added";
+        this.topings = "Not added";
         this.flag = 1;
+        this.customizationCrust = false;
+        this.customizationChesse = false;
+        this.customizationTopings = false;
         //----------end-------------------
         //check order status related variable
         this.CheckOrderStatusFlag = false;
@@ -40,6 +49,15 @@ class ChatComponent {
     }
     //function to communicate the api to get the particular response
     chatCommunicate(question) {
+        if (question == "Crust Type") {
+            this.customizationCrust = true;
+        }
+        if (question == "Add extra Cheese") {
+            this.customizationChesse = true;
+        }
+        if (question == "Toppings") {
+            this.customizationTopings = true;
+        }
         this.chatService.communicate(question).subscribe(data => {
             this.test = data;
             console.log("its running");
@@ -48,6 +66,12 @@ class ChatComponent {
                 this.chatWelcome();
             }
             else {
+                if (this.test.response[0].question == "veg") {
+                    this.pizzaType = "veg";
+                }
+                if (this.test.response[0].question == "non-veg") {
+                    this.pizzaType = "Non-Veg";
+                }
                 console.log(question);
                 this.chatbotResponse();
             }
@@ -86,14 +110,24 @@ class ChatComponent {
                     p.className = "botResponseCss";
                     chatdiv.appendChild(p);
                     console.log(resArray[i]);
-                    if (resArray[i] == " List of the pizza") {
+                    if (resArray[i] == "Please choose pizza") {
                         console.log(resArray[i]);
                         console.log("if is triggering");
                         this.pizzaList = true;
+                        this.displayPizzaCards();
+                        break;
                     }
                     if (resArray[i] == "Please enter your Order Id") {
                         console.log(resArray[i]);
                         this.CheckOrderStatusFlag = true;
+                    }
+                    if (resArray[i] == "How many do you want?") {
+                        console.log(resArray[i]);
+                        this.HowManyPizza = true;
+                    }
+                    if (resArray[i].includes("Extra")) {
+                        this.cheeseName = "Extra Cheese";
+                        this.anyThingExtra();
                     }
                 }
                 else {
@@ -104,9 +138,26 @@ class ChatComponent {
                     button.innerHTML = resArray[i];
                     button.id = resArray[i] + i.toString();
                     button.className = "botResponseOption";
-                    button.addEventListener("click", () => {
-                        this.chatUserRequestOption(button.id);
-                    });
+                    if (this.HowManyPizza == true) {
+                        button.addEventListener("click", () => {
+                            this.HowMany(document.getElementById(button.id).innerHTML);
+                        });
+                    }
+                    else if (this.customizationCrust == true) {
+                        button.addEventListener("click", () => {
+                            this.addCrust(document.getElementById(button.id).innerHTML);
+                        });
+                    }
+                    else if (this.customizationTopings == true) {
+                        button.addEventListener("click", () => {
+                            this.addTopings(document.getElementById(button.id).innerHTML);
+                        });
+                    }
+                    else {
+                        button.addEventListener("click", () => {
+                            this.chatUserRequestOption(button.id);
+                        });
+                    }
                     chatdiv.appendChild(button);
                 }
             }
@@ -116,6 +167,58 @@ class ChatComponent {
         if (this.test.response[0].reload == "true") {
             setTimeout(this.reload, 9000);
         }
+    }
+    //this function display the pizza in the form of the card
+    displayPizzaCards() {
+        this.chatService.PizzaCardsList(this.pizzaType).subscribe(data => {
+            console.log(data);
+            this.pizzaArray = data;
+            const app = document.getElementById("chatBox");
+            const maindiv = document.createElement("div");
+            maindiv.id = "cardPizzaDiv";
+            app.appendChild(maindiv);
+            for (let i = 0; i < this.pizzaArray.response.length; i++) {
+                console.log(this.pizzaArray.response[i]);
+                const cardDiv = document.createElement("div");
+                cardDiv.id = "internalPizzaCardDiv";
+                maindiv.appendChild(cardDiv);
+                const pizzaImg = document.createElement("img");
+                pizzaImg.src = this.pizzaArray.response[i].pizza_pic;
+                pizzaImg.id = "pizzaImage" + i;
+                pizzaImg.className = "pizzaImage";
+                cardDiv.appendChild(pizzaImg);
+                const pname = document.createElement("p");
+                pname.id = "pizzaName" + i;
+                pname.className = "pizzaName";
+                pname.innerText = this.pizzaArray.response[i].pizza_name;
+                cardDiv.appendChild(pname);
+                const hr = document.createElement("hr");
+                hr.id = "hr1";
+                cardDiv.appendChild(hr);
+                const pabout = document.createElement("p");
+                pabout.id = "pizzaAbout";
+                pabout.innerText = this.pizzaArray.response[i].special;
+                cardDiv.appendChild(pabout);
+                const rateDiv = document.createElement("div");
+                rateDiv.id = "rateDiv";
+                cardDiv.appendChild(rateDiv);
+                const prs = document.createElement("p");
+                prs.id = "pizzarate";
+                prs.innerText = "Rs:-";
+                rateDiv.appendChild(prs);
+                const prate = document.createElement("p");
+                prate.id = "pizzarate" + i;
+                prate.innerText = this.pizzaArray.response[i].rate;
+                rateDiv.appendChild(prate);
+                const selectButton = document.createElement("button");
+                selectButton.id = "pizzaSelectButton";
+                selectButton.textContent = "Select";
+                selectButton.addEventListener("click", () => {
+                    this.pizzaNameStoring(pname.id, prate.id, pizzaImg.src);
+                });
+                cardDiv.appendChild(selectButton);
+            }
+        });
     }
     //for reloading the the bot
     reload() {
@@ -140,18 +243,22 @@ class ChatComponent {
         if (this.CheckOrderStatusFlag == true || this.need_help == true) {
             this.CheckOrderSatus(question);
         }
+        else if (question.includes("who") || question.includes("you")) {
+            this.chatCommunicate("about");
+            setTimeout(() => { this.ngOnInit(); }, 1000);
+        }
         else {
-            if (this.pizzaList == true && this.flag == 1) {
+            if (this.bookingOrder == true && this.flag == 1) {
                 this.Name = question;
                 this.flag = this.flag + 1;
                 this.takeOrderPhone();
             }
-            else if (this.pizzaList == true && this.flag == 2) {
+            else if (this.bookingOrder == true && this.flag == 2) {
                 this.phoneNumber = question;
                 this.flag = this.flag + 1;
                 this.takeOrderAddress();
             }
-            else if (this.pizzaList == true && this.flag == 3) {
+            else if (this.bookingOrder == true && this.flag == 3) {
                 this.address = question;
                 this.orderCompleted();
                 console.log(this.Name);
@@ -169,9 +276,12 @@ class ChatComponent {
         //part to take the order the pizza
         if (this.pizzaList == true) {
             //triggering function to take the order
-            this.takeOrderName(id);
+            this.userConversastion(id);
+            this.pizzaList = false;
+            this.chatCommunicate("customization");
         }
         else {
+            console.log(id);
             const app = document.getElementById("chatBox");
             //chat response div
             const userchatdiv = document.createElement("div");
@@ -196,20 +306,24 @@ class ChatComponent {
         }
     }
     //method to take the order
-    takeOrderName(id) {
-        this.pizzaName = document.getElementById(id).innerHTML;
-        const app = document.getElementById("chatBox");
-        const maindiv = document.createElement("div");
-        maindiv.id = "maindiv";
-        app.appendChild(maindiv);
-        const img = document.createElement("img");
-        img.src = "../../assets/robot (1).png";
-        img.className = "botIcon";
-        maindiv.appendChild(img);
-        const p = document.createElement("p");
-        p.className = "botResponseCss";
-        p.textContent = "Please enter your Name";
-        maindiv.appendChild(p);
+    takeOrderName() {
+        this.chatCommunicate("detail info");
+        this.bookingOrder = true;
+        // this.pizzaName = document.getElementById(id).innerHTML;
+        setTimeout(() => {
+            const app = document.getElementById("chatBox");
+            const maindiv = document.createElement("div");
+            maindiv.id = "maindiv";
+            app.appendChild(maindiv);
+            const img = document.createElement("img");
+            img.src = "../../assets/robot (1).png";
+            img.className = "botIcon";
+            maindiv.appendChild(img);
+            const p = document.createElement("p");
+            p.className = "botResponseCss";
+            p.textContent = "Please enter your Name";
+            maindiv.appendChild(p);
+        }, 3000);
     }
     takeOrderPhone() {
         const app = document.getElementById("chatBox");
@@ -245,7 +359,7 @@ class ChatComponent {
     }
     orderCompleted() {
         this.orderId = 'ORD' + Math.floor(Math.random() * 1000);
-        this.chatService.placeOrder(this.phoneNumber, this.Name, this.pizzaName, this.address, this.orderId).subscribe(data => {
+        this.chatService.placeOrder(this.phoneNumber, this.Name, this.pizzaName, this.address, this.orderId, this.crustName, this.topings, this.cheeseName, this.totalAmount, this.img).subscribe(data => {
             console.log(data);
             this.orderThanks();
         });
@@ -271,18 +385,36 @@ class ChatComponent {
         const p0 = document.createElement("p");
         p0.textContent = "Order Placed Sucessfully!!";
         cardId.appendChild(p0);
+        const hr = document.createElement("hr");
+        hr.id = "hr";
+        cardId.appendChild(hr);
+        const detailCard = document.createElement("div");
+        detailCard.id = "detailcard";
+        cardId.appendChild(detailCard);
+        const p4 = document.createElement("p");
+        p4.textContent = "Order Details";
+        detailCard.appendChild(p4);
+        const p5 = document.createElement("p");
+        p5.textContent = "Hi " + this.Name + ",";
+        detailCard.appendChild(p5);
         const p3 = document.createElement("p");
         p3.textContent = "Your Order Id:-" + this.orderId;
-        cardId.appendChild(p3);
+        detailCard.appendChild(p3);
         const p = document.createElement("p");
         p.textContent = "Pizza:-" + this.pizzaName;
-        cardId.appendChild(p);
+        detailCard.appendChild(p);
+        const p6 = document.createElement("p");
+        p6.textContent = "Add on:-" + this.crustName + "," + this.topings + "," + this.cheeseName;
+        detailCard.appendChild(p6);
+        const p7 = document.createElement("p");
+        p7.textContent = "Paid amount:-" + " Rs." + this.totalAmount;
+        detailCard.appendChild(p7);
         const p1 = document.createElement("p");
         p1.textContent = "Number:-" + this.phoneNumber.toString();
-        cardId.appendChild(p1);
+        detailCard.appendChild(p1);
         const p2 = document.createElement("p");
         p2.textContent = "Delivery Address:-" + this.address;
-        cardId.appendChild(p2);
+        detailCard.appendChild(p2);
     }
     //function to check order status
     CheckOrderSatus(orderId) {
@@ -404,26 +536,105 @@ class ChatComponent {
         const id = document.getElementById("chatContainer");
         id.scrollTop = id.scrollHeight;
     }
+    //used for pizzabooking conversastion on base of id
+    userConversastion(id) {
+        const app = document.getElementById("chatBox");
+        //chat response div
+        const userchatdiv = document.createElement("div");
+        userchatdiv.id = "userchatdiv";
+        app.appendChild(userchatdiv);
+        //--------------chat response div-------
+        const img = document.createElement("img");
+        img.src = "../../assets/user.png";
+        img.className = "userIcon";
+        userchatdiv.appendChild(img);
+        const p = document.createElement("p");
+        p.textContent = document.getElementById(id).innerHTML;
+        p.className = "userResponseCss";
+        userchatdiv.appendChild(p);
+        console.log(document.getElementById(id).innerHTML);
+    }
+    //used for pizzabooking conversastion on base of value
+    userConversastionValue(value) {
+        const app = document.getElementById("chatBox");
+        //chat response div
+        const userchatdiv = document.createElement("div");
+        userchatdiv.id = "userchatdiv";
+        app.appendChild(userchatdiv);
+        //--------------chat response div-------
+        const img = document.createElement("img");
+        img.src = "../../assets/user.png";
+        img.className = "userIcon";
+        userchatdiv.appendChild(img);
+        const p = document.createElement("p");
+        p.textContent = value;
+        p.className = "userResponseCss";
+        userchatdiv.appendChild(p);
+        console.log(value);
+    }
+    //this function is use to store the quantity of the pizza
+    HowMany(quantity) {
+        this.NoOfPizza = quantity;
+        console.log("no of pizza:-" + this.NoOfPizza);
+        console.log("pizza cost:-" + this.totalAmount);
+        this.totalAmount = parseInt(this.totalAmount) * this.NoOfPizza;
+        console.log("Total Amount:" + this.totalAmount);
+        console.log(quantity);
+        this.userConversastionValue(quantity);
+        this.takeOrderName();
+    }
+    //this function is use to store the name of the pizzza
+    pizzaNameStoring(id, rateId, imgsrc) {
+        const pizzaDiv = document.getElementById("cardPizzaDiv");
+        pizzaDiv.style.display = "none";
+        this.pizzaName = document.getElementById(id).innerHTML;
+        console.log("Pizza name:" + this.pizzaName);
+        this.totalAmount = document.getElementById(rateId).innerHTML;
+        console.log("pizza rate:" + this.totalAmount);
+        this.img = imgsrc;
+        console.log("Image:" + this.img);
+        this.chatUserRequestOption(id);
+    }
+    //method to add crust
+    addCrust(crust) {
+        this.crustName = crust;
+        this.userConversastionValue(crust);
+        this.customizationCrust = false;
+        console.log("crust name:" + this.crustName);
+        this.anyThingExtra();
+    }
+    addTopings(topings) {
+        this.topings = topings;
+        this.userConversastionValue(topings);
+        this.customizationTopings = false;
+        console.log("toping name:" + this.topings);
+        this.anyThingExtra();
+    }
+    anyThingExtra() {
+        this.chatCommunicate("repeat question");
+    }
 }
 ChatComponent.ɵfac = function ChatComponent_Factory(t) { return new (t || ChatComponent)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdirectiveInject"](_chat_service_service__WEBPACK_IMPORTED_MODULE_1__["ChatServiceService"])); };
-ChatComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ChatComponent, selectors: [["app-chat"]], decls: 10, vars: 0, consts: [[1, "chatbotheading"], ["src", "../../assets/robot (2).png", "alt", "", 1, "botimg"], [1, "botname"], ["id", "chatContainer", 1, "chatContainer"], ["id", "chatBox", 1, "chatBox"], [1, "responseContainer"], ["type", "text", "placeholder", "   please enter response...", 1, "responseField"], ["question", ""], ["src", "../../assets/enter.png", "alt", "button-image", 1, "responseButton", 3, "click"]], template: function ChatComponent_Template(rf, ctx) { if (rf & 1) {
+ChatComponent.ɵcmp = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵdefineComponent"]({ type: ChatComponent, selectors: [["app-chat"]], decls: 11, vars: 0, consts: [[1, "container"], [1, "chatbotheading"], ["src", "../../assets/robot (2).png", "alt", "", 1, "botimg"], [1, "botname"], ["id", "chatContainer", 1, "chatContainer"], ["id", "chatBox", 1, "chatBox"], [1, "responseContainer"], ["type", "text", "placeholder", "   please enter response...", 1, "responseField"], ["question", ""], ["src", "../../assets/enter.png", "alt", "button-image", 1, "responseButton", 3, "click"]], template: function ChatComponent_Template(rf, ctx) { if (rf & 1) {
         const _r1 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵgetCurrentView"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](0, "div", 0);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](1, "img", 1);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](2, "p", 2);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](3, "Pizza Chat Bot");
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](1, "div", 1);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](2, "img", 2);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](3, "p", 3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵtext"](4, "Pizza Chat Bot");
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](4, "div", 3);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](5, "div", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](5, "div", 4);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](6, "div", 5);
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](6, "div", 5);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](7, "input", 6, 7);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](9, "img", 8);
-        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ChatComponent_Template_img_click_9_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r1); const _r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵreference"](8); return ctx.chatUserRequest(_r0.value); });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](7, "div", 6);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelement"](8, "input", 7, 8);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementStart"](10, "img", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵlistener"]("click", function ChatComponent_Template_img_click_10_listener() { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵrestoreView"](_r1); const _r0 = _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵreference"](9); return ctx.chatUserRequest(_r0.value); });
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
         _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
-    } }, styles: ["@import url('https://fonts.googleapis.com/css2?family=Nerko+One&display=swap');\r\n.chatContainer[_ngcontent-%COMP%]{\r\n    border: 2px solid #1A1A1D;\r\n    border-radius: 20px;\r\n    background-color:#1A1A1D;\r\n    height: 500px;\r\n    width: 600px;\r\n    position: relative;\r\n    overflow: scroll;\r\n}\r\n[_ngcontent-%COMP%]::-webkit-scrollbar {\r\n  width: 0px;\r\n  background: transparent;\r\n}\r\n.responseContainer[_ngcontent-%COMP%]{\r\ndisplay: flex;\r\nflex-flow: row;\r\n}\r\n.responseField[_ngcontent-%COMP%]{\r\n  height: 30px;\r\n  width: 520px;\r\n  border: 2px solid black;\r\n  border-radius: 20px;\r\n  margin-top: 3px;\r\n  padding-left: 10px;\r\n}\r\ninput[_ngcontent-%COMP%]:focus{\r\n  outline: none;\r\n}\r\n.responseButton[_ngcontent-%COMP%]{\r\n    margin-left: 10px;\r\n    margin-top: 3px;\r\n    height: 35px;\r\n    width: 35px;\r\n}\r\n.chatBox[_ngcontent-%COMP%]{\r\n  display: flex;\r\n  flex-flow: column;\r\n  justify-content: space-between;\r\n}\r\n.chatbotheading[_ngcontent-%COMP%]{\r\n  border: 1px solid #DC3D24;\r\n  height: 70px;\r\n  width: 600px;\r\n  display: flex;\r\n  flex-direction: row;\r\n  border-radius: 20px;\r\n  background-color: #DC3D24;\r\n}\r\n.botname[_ngcontent-%COMP%]{\r\n  padding-left: 30px;\r\n  font-size: 30px;\r\n  margin-top:10px;\r\n  font-family: 'Nerko One', cursive;\r\n  color: white;\r\n}\r\n.botimg[_ngcontent-%COMP%]{\r\n  margin-left: 10px;\r\n  width: 64px;\r\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvY2hhdC9jaGF0LmNvbXBvbmVudC5jc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsOEVBQThFO0FBQzlFO0lBQ0kseUJBQXlCO0lBQ3pCLG1CQUFtQjtJQUNuQix3QkFBd0I7SUFDeEIsYUFBYTtJQUNiLFlBQVk7SUFDWixrQkFBa0I7SUFDbEIsZ0JBQWdCO0FBQ3BCO0FBQ0E7RUFDRSxVQUFVO0VBQ1YsdUJBQXVCO0FBQ3pCO0FBQ0E7QUFDQSxhQUFhO0FBQ2IsY0FBYztBQUNkO0FBQ0E7RUFDRSxZQUFZO0VBQ1osWUFBWTtFQUNaLHVCQUF1QjtFQUN2QixtQkFBbUI7RUFDbkIsZUFBZTtFQUNmLGtCQUFrQjtBQUNwQjtBQUNBO0VBQ0UsYUFBYTtBQUNmO0FBQ0E7SUFDSSxpQkFBaUI7SUFDakIsZUFBZTtJQUNmLFlBQVk7SUFDWixXQUFXO0FBQ2Y7QUFDQTtFQUNFLGFBQWE7RUFDYixpQkFBaUI7RUFDakIsOEJBQThCO0FBQ2hDO0FBQ0E7RUFDRSx5QkFBeUI7RUFDekIsWUFBWTtFQUNaLFlBQVk7RUFDWixhQUFhO0VBQ2IsbUJBQW1CO0VBQ25CLG1CQUFtQjtFQUNuQix5QkFBeUI7QUFDM0I7QUFDQTtFQUNFLGtCQUFrQjtFQUNsQixlQUFlO0VBQ2YsZUFBZTtFQUNmLGlDQUFpQztFQUNqQyxZQUFZO0FBQ2Q7QUFDQTtFQUNFLGlCQUFpQjtFQUNqQixXQUFXO0FBQ2IiLCJmaWxlIjoic3JjL2FwcC9jaGF0L2NoYXQuY29tcG9uZW50LmNzcyIsInNvdXJjZXNDb250ZW50IjpbIkBpbXBvcnQgdXJsKCdodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tL2NzczI/ZmFtaWx5PU5lcmtvK09uZSZkaXNwbGF5PXN3YXAnKTtcclxuLmNoYXRDb250YWluZXJ7XHJcbiAgICBib3JkZXI6IDJweCBzb2xpZCAjMUExQTFEO1xyXG4gICAgYm9yZGVyLXJhZGl1czogMjBweDtcclxuICAgIGJhY2tncm91bmQtY29sb3I6IzFBMUExRDtcclxuICAgIGhlaWdodDogNTAwcHg7XHJcbiAgICB3aWR0aDogNjAwcHg7XHJcbiAgICBwb3NpdGlvbjogcmVsYXRpdmU7XHJcbiAgICBvdmVyZmxvdzogc2Nyb2xsO1xyXG59XHJcbjo6LXdlYmtpdC1zY3JvbGxiYXIge1xyXG4gIHdpZHRoOiAwcHg7XHJcbiAgYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XHJcbn1cclxuLnJlc3BvbnNlQ29udGFpbmVye1xyXG5kaXNwbGF5OiBmbGV4O1xyXG5mbGV4LWZsb3c6IHJvdztcclxufVxyXG4ucmVzcG9uc2VGaWVsZHtcclxuICBoZWlnaHQ6IDMwcHg7XHJcbiAgd2lkdGg6IDUyMHB4O1xyXG4gIGJvcmRlcjogMnB4IHNvbGlkIGJsYWNrO1xyXG4gIGJvcmRlci1yYWRpdXM6IDIwcHg7XHJcbiAgbWFyZ2luLXRvcDogM3B4O1xyXG4gIHBhZGRpbmctbGVmdDogMTBweDtcclxufVxyXG5pbnB1dDpmb2N1c3tcclxuICBvdXRsaW5lOiBub25lO1xyXG59XHJcbi5yZXNwb25zZUJ1dHRvbntcclxuICAgIG1hcmdpbi1sZWZ0OiAxMHB4O1xyXG4gICAgbWFyZ2luLXRvcDogM3B4O1xyXG4gICAgaGVpZ2h0OiAzNXB4O1xyXG4gICAgd2lkdGg6IDM1cHg7XHJcbn1cclxuLmNoYXRCb3h7XHJcbiAgZGlzcGxheTogZmxleDtcclxuICBmbGV4LWZsb3c6IGNvbHVtbjtcclxuICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XHJcbn1cclxuLmNoYXRib3RoZWFkaW5ne1xyXG4gIGJvcmRlcjogMXB4IHNvbGlkICNEQzNEMjQ7XHJcbiAgaGVpZ2h0OiA3MHB4O1xyXG4gIHdpZHRoOiA2MDBweDtcclxuICBkaXNwbGF5OiBmbGV4O1xyXG4gIGZsZXgtZGlyZWN0aW9uOiByb3c7XHJcbiAgYm9yZGVyLXJhZGl1czogMjBweDtcclxuICBiYWNrZ3JvdW5kLWNvbG9yOiAjREMzRDI0O1xyXG59XHJcbi5ib3RuYW1le1xyXG4gIHBhZGRpbmctbGVmdDogMzBweDtcclxuICBmb250LXNpemU6IDMwcHg7XHJcbiAgbWFyZ2luLXRvcDoxMHB4O1xyXG4gIGZvbnQtZmFtaWx5OiAnTmVya28gT25lJywgY3Vyc2l2ZTtcclxuICBjb2xvcjogd2hpdGU7XHJcbn1cclxuLmJvdGltZ3tcclxuICBtYXJnaW4tbGVmdDogMTBweDtcclxuICB3aWR0aDogNjRweDtcclxufSJdfQ== */"] });
+        _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵelementEnd"]();
+    } }, styles: ["@import url('https://fonts.googleapis.com/css2?family=Nerko+One&display=swap');\r\n.chatContainer[_ngcontent-%COMP%]{\r\n    border: 2px solid #1A1A1D;\r\n    border-radius: 20px;\r\n    background-color:#1A1A1D;\r\n    height: 500px;\r\n    width: 600px;\r\n    position: relative;\r\n    overflow: scroll;\r\n}\r\n[_ngcontent-%COMP%]::-webkit-scrollbar {\r\n  width: 0px;\r\n  background: transparent;\r\n}\r\n.responseContainer[_ngcontent-%COMP%]{\r\ndisplay: flex;\r\nflex-flow: row;\r\n}\r\n.responseField[_ngcontent-%COMP%]{\r\n  height: 30px;\r\n  width: 520px;\r\n  border: 2px solid black;\r\n  border-radius: 20px;\r\n  margin-top: 3px;\r\n  padding-left: 10px;\r\n}\r\ninput[_ngcontent-%COMP%]:focus{\r\n  outline: none;\r\n}\r\n.responseButton[_ngcontent-%COMP%]{\r\n    margin-left: 10px;\r\n    margin-top: 3px;\r\n    height: 35px;\r\n    width: 35px;\r\n}\r\n.chatBox[_ngcontent-%COMP%]{\r\n  display: flex;\r\n  flex-flow: column;\r\n  justify-content: space-between;\r\n}\r\n.chatbotheading[_ngcontent-%COMP%]{\r\n  border: 1px solid #DC3D24;\r\n  height: 70px;\r\n  width: 600px;\r\n  display: flex;\r\n  flex-direction: row;\r\n  border-radius: 20px;\r\n  background-color: #DC3D24;\r\n}\r\n.botname[_ngcontent-%COMP%]{\r\n  padding-left: 30px;\r\n  font-size: 30px;\r\n  margin-top:10px;\r\n  font-family: 'Nerko One', cursive;\r\n  color: white;\r\n}\r\n.botimg[_ngcontent-%COMP%]{\r\n  margin-left: 10px;\r\n  width: 64px;\r\n}\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvY2hhdC9jaGF0LmNvbXBvbmVudC5jc3MiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsOEVBQThFO0FBQzlFO0lBQ0kseUJBQXlCO0lBQ3pCLG1CQUFtQjtJQUNuQix3QkFBd0I7SUFDeEIsYUFBYTtJQUNiLFlBQVk7SUFDWixrQkFBa0I7SUFDbEIsZ0JBQWdCO0FBQ3BCO0FBQ0E7RUFDRSxVQUFVO0VBQ1YsdUJBQXVCO0FBQ3pCO0FBQ0E7QUFDQSxhQUFhO0FBQ2IsY0FBYztBQUNkO0FBQ0E7RUFDRSxZQUFZO0VBQ1osWUFBWTtFQUNaLHVCQUF1QjtFQUN2QixtQkFBbUI7RUFDbkIsZUFBZTtFQUNmLGtCQUFrQjtBQUNwQjtBQUNBO0VBQ0UsYUFBYTtBQUNmO0FBQ0E7SUFDSSxpQkFBaUI7SUFDakIsZUFBZTtJQUNmLFlBQVk7SUFDWixXQUFXO0FBQ2Y7QUFDQTtFQUNFLGFBQWE7RUFDYixpQkFBaUI7RUFDakIsOEJBQThCO0FBQ2hDO0FBQ0E7RUFDRSx5QkFBeUI7RUFDekIsWUFBWTtFQUNaLFlBQVk7RUFDWixhQUFhO0VBQ2IsbUJBQW1CO0VBQ25CLG1CQUFtQjtFQUNuQix5QkFBeUI7QUFDM0I7QUFDQTtFQUNFLGtCQUFrQjtFQUNsQixlQUFlO0VBQ2YsZUFBZTtFQUNmLGlDQUFpQztFQUNqQyxZQUFZO0FBQ2Q7QUFDQTtFQUNFLGlCQUFpQjtFQUNqQixXQUFXO0FBQ2IiLCJmaWxlIjoic3JjL2FwcC9jaGF0L2NoYXQuY29tcG9uZW50LmNzcyIsInNvdXJjZXNDb250ZW50IjpbIkBpbXBvcnQgdXJsKCdodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tL2NzczI/ZmFtaWx5PU5lcmtvK09uZSZkaXNwbGF5PXN3YXAnKTtcclxuLmNoYXRDb250YWluZXJ7XHJcbiAgICBib3JkZXI6IDJweCBzb2xpZCAjMUExQTFEO1xyXG4gICAgYm9yZGVyLXJhZGl1czogMjBweDtcclxuICAgIGJhY2tncm91bmQtY29sb3I6IzFBMUExRDtcclxuICAgIGhlaWdodDogNTAwcHg7XHJcbiAgICB3aWR0aDogNjAwcHg7XHJcbiAgICBwb3NpdGlvbjogcmVsYXRpdmU7XHJcbiAgICBvdmVyZmxvdzogc2Nyb2xsO1xyXG59XHJcbjo6LXdlYmtpdC1zY3JvbGxiYXIge1xyXG4gIHdpZHRoOiAwcHg7XHJcbiAgYmFja2dyb3VuZDogdHJhbnNwYXJlbnQ7XHJcbn1cclxuLnJlc3BvbnNlQ29udGFpbmVye1xyXG5kaXNwbGF5OiBmbGV4O1xyXG5mbGV4LWZsb3c6IHJvdztcclxufVxyXG4ucmVzcG9uc2VGaWVsZHtcclxuICBoZWlnaHQ6IDMwcHg7XHJcbiAgd2lkdGg6IDUyMHB4O1xyXG4gIGJvcmRlcjogMnB4IHNvbGlkIGJsYWNrO1xyXG4gIGJvcmRlci1yYWRpdXM6IDIwcHg7XHJcbiAgbWFyZ2luLXRvcDogM3B4O1xyXG4gIHBhZGRpbmctbGVmdDogMTBweDtcclxufVxyXG5pbnB1dDpmb2N1c3tcclxuICBvdXRsaW5lOiBub25lO1xyXG59XHJcbi5yZXNwb25zZUJ1dHRvbntcclxuICAgIG1hcmdpbi1sZWZ0OiAxMHB4O1xyXG4gICAgbWFyZ2luLXRvcDogM3B4O1xyXG4gICAgaGVpZ2h0OiAzNXB4O1xyXG4gICAgd2lkdGg6IDM1cHg7XHJcbn1cclxuLmNoYXRCb3h7XHJcbiAgZGlzcGxheTogZmxleDtcclxuICBmbGV4LWZsb3c6IGNvbHVtbjtcclxuICBqdXN0aWZ5LWNvbnRlbnQ6IHNwYWNlLWJldHdlZW47XHJcbn1cclxuLmNoYXRib3RoZWFkaW5ne1xyXG4gIGJvcmRlcjogMXB4IHNvbGlkICNEQzNEMjQ7XHJcbiAgaGVpZ2h0OiA3MHB4O1xyXG4gIHdpZHRoOiA2MDBweDtcclxuICBkaXNwbGF5OiBmbGV4O1xyXG4gIGZsZXgtZGlyZWN0aW9uOiByb3c7XHJcbiAgYm9yZGVyLXJhZGl1czogMjBweDtcclxuICBiYWNrZ3JvdW5kLWNvbG9yOiAjREMzRDI0O1xyXG59XHJcbi5ib3RuYW1le1xyXG4gIHBhZGRpbmctbGVmdDogMzBweDtcclxuICBmb250LXNpemU6IDMwcHg7XHJcbiAgbWFyZ2luLXRvcDoxMHB4O1xyXG4gIGZvbnQtZmFtaWx5OiAnTmVya28gT25lJywgY3Vyc2l2ZTtcclxuICBjb2xvcjogd2hpdGU7XHJcbn1cclxuLmJvdGltZ3tcclxuICBtYXJnaW4tbGVmdDogMTBweDtcclxuICB3aWR0aDogNjRweDtcclxufVxyXG4iXX0= */"] });
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵsetClassMetadata"](ChatComponent, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"],
         args: [{
@@ -499,12 +710,17 @@ class ChatServiceService {
         console.log(question);
         return this.http.get("chatbot//api/v1/" + question);
     }
-    placeOrder(phoneNumber, name, pizzaName, address, orderId) {
+    placeOrder(phoneNumber, name, pizzaName, address, orderId, crustName, topingName, cheeseName, totalAmount, img) {
         console.log("in service function");
         const params = {
             phoneNumber: phoneNumber,
             name: name,
             pizzaName: pizzaName,
+            crustName: crustName,
+            topingName: topingName,
+            cheeseName: cheeseName,
+            totalAmount: totalAmount,
+            img: img,
             address: address,
             orderId: orderId,
             status: "will be delivered in 30 mins"
@@ -518,6 +734,10 @@ class ChatServiceService {
     cancelOrder(OrderId) {
         console.log("to cancel order");
         return this.http.get("chatbot/api/v1/cancelOrder/" + OrderId);
+    }
+    PizzaCardsList(Type) {
+        console.log("fetching all the pizza list");
+        return this.http.get("chatbot/api/v1/showPizzaInCard/" + Type);
     }
 }
 ChatServiceService.ɵfac = function ChatServiceService_Factory(t) { return new (t || ChatServiceService)(_angular_core__WEBPACK_IMPORTED_MODULE_0__["ɵɵinject"](_angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpClient"])); };
@@ -585,6 +805,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _chat_chat_component__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./chat/chat.component */ "+XlM");
 /* harmony import */ var _chat_service_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./chat-service.service */ "BJqi");
 /* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @angular/common/http */ "tk/3");
+/* harmony import */ var _agm_core__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @agm/core */ "pxUr");
+
+
 
 
 
@@ -599,12 +822,16 @@ AppModule.ɵmod = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineNgModule
 AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector"]({ factory: function AppModule_Factory(t) { return new (t || AppModule)(); }, providers: [_chat_service_service__WEBPACK_IMPORTED_MODULE_5__["ChatServiceService"]], imports: [[
             _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
             _app_routing_module__WEBPACK_IMPORTED_MODULE_2__["AppRoutingModule"],
-            _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"]
+            _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"],
+            _agm_core__WEBPACK_IMPORTED_MODULE_7__["AgmCoreModule"].forRoot({
+                apiKey: 'AIzaSyBaKumS2brsx6iqDlC9PHfsrPSunxN07Lw',
+                libraries: ["places"]
+            })
         ]] });
 (function () { (typeof ngJitMode === "undefined" || ngJitMode) && _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵsetNgModuleScope"](AppModule, { declarations: [_app_component__WEBPACK_IMPORTED_MODULE_3__["AppComponent"],
         _chat_chat_component__WEBPACK_IMPORTED_MODULE_4__["ChatComponent"]], imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
         _app_routing_module__WEBPACK_IMPORTED_MODULE_2__["AppRoutingModule"],
-        _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"]] }); })();
+        _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"], _agm_core__WEBPACK_IMPORTED_MODULE_7__["AgmCoreModule"]] }); })();
 /*@__PURE__*/ (function () { _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵsetClassMetadata"](AppModule, [{
         type: _angular_core__WEBPACK_IMPORTED_MODULE_1__["NgModule"],
         args: [{
@@ -615,7 +842,11 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
                 imports: [
                     _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
                     _app_routing_module__WEBPACK_IMPORTED_MODULE_2__["AppRoutingModule"],
-                    _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"]
+                    _angular_common_http__WEBPACK_IMPORTED_MODULE_6__["HttpClientModule"],
+                    _agm_core__WEBPACK_IMPORTED_MODULE_7__["AgmCoreModule"].forRoot({
+                        apiKey: 'AIzaSyBaKumS2brsx6iqDlC9PHfsrPSunxN07Lw',
+                        libraries: ["places"]
+                    })
                 ],
                 providers: [_chat_service_service__WEBPACK_IMPORTED_MODULE_5__["ChatServiceService"]],
                 bootstrap: [_app_component__WEBPACK_IMPORTED_MODULE_3__["AppComponent"]]

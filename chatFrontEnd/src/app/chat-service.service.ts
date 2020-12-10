@@ -14,12 +14,17 @@ export class ChatServiceService {
     return this.http.get("http://localhost:3000/chatbot//api/v1/"+question);
   }
 
-  placeOrder(phoneNumber:any,name:any,pizzaName:any,address:any,orderId:any){
+  placeOrder(phoneNumber:any,name:any,pizzaName:any,address:any,orderId:any,crustName:any,topingName:any,cheeseName:any,totalAmount:any,img:any){
     console.log("in service function");
     const params={
       phoneNumber:phoneNumber,
       name:name,
       pizzaName:pizzaName,
+      crustName:crustName,
+      topingName:topingName,
+      cheeseName:cheeseName,
+      totalAmount:totalAmount,
+      img:img,
       address:address,
       orderId:orderId,
       status:"will be delivered in 30 mins"
@@ -36,4 +41,10 @@ export class ChatServiceService {
     console.log("to cancel order");
     return this.http.get("http://localhost:3000/chatbot/api/v1/cancelOrder/"+OrderId);
   }
+
+  PizzaCardsList(Type:any){
+    console.log("fetching all the pizza list");
+    return this.http.get("http://localhost:3000/chatbot/api/v1/showPizzaInCard/"+Type);
+  }
+
 }

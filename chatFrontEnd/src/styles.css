@@ -24,6 +24,8 @@
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 5px;
+    margin-bottom: 0px;
+    margin-top: 20px;
     border-top-left-radius: 10px;
     border-bottom-right-radius: 10px;
     font-family: 'Nunito Sans', sans-serif;
@@ -74,6 +76,7 @@
 #userchatdiv{
     float: right;
     width: 600px;
+    height: 60px;
 }
 #maindiv{
     margin-top: 20px;
@@ -90,4 +93,67 @@
 }
 .cardImg{
     margin-left: 60px
+}
+
+/* styles for the pizza card to be displayed */
+#cardPizzaDiv{
+    height: 500px;
+    width: 600px;
+    display: flex;
+    flex-flow: row;
+    overflow: scroll;
+    
+}
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+.pizzaImage{
+    height: 100px;
+    width:100px;
+}
+#internalPizzaCardDiv{
+    height:464px;
+    width: 300px;
+    margin-left: 10px;
+    margin-right: 10px;
+    border: solid 2px white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+#pizzaAbout{
+height: 200px;
+}
+#pizzaSelectButton{
+    position: absolute;
+    bottom: 0;
+    height: 27px;
+    width: 100px;
+    font-family: 'Nunito Sans', sans-serif;
+}
+#hr{
+    height:2px;
+    border-width:0;
+    width: 200px;
+    color:gray;
+    background-color:gray;
+}
+#hr1{
+    height:2px;
+    border-width:0;
+    width: 100px;
+    color:gray;
+    background-color:gray;
+}
+#internalPizzaCardDiv{
+    font-family: 'Nunito Sans', sans-serif;
+    color: whitesmoke;
+    font-size: 13px;
+}
+#rateDiv{
+    margin-left: 20px;
+    display: flex;
+    flex-direction: row;
+    font-family: 'Nunito Sans', sans-serif;
 }
