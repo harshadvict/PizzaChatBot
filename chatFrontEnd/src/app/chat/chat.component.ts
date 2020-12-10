@@ -13,7 +13,7 @@ export class ChatComponent implements OnInit {
   welcome: boolean = true;
 
   //pizza and user detail variable
-  bookingOrder:boolean=false;
+  bookingOrder: boolean = false;
   HowManyPizza: boolean = false;
   NoOfPizza: number = 0;
   pizzaArray: any;
@@ -21,16 +21,16 @@ export class ChatComponent implements OnInit {
   pizzaList: boolean = false;
   pizzaName: any;
   cheeseName: string = "Not added";
-  crustName:string="Not added";
-  topings:string="Not added";
+  crustName: string = "Not added";
+  topings: string = "Not added";
   Name: any;
   phoneNumber: number;
   address: any;
   orderId: any;
   flag: number = 1;
   customizationCrust: boolean = false;
-  customizationChesse:boolean=false;
-  customizationTopings:boolean=false;
+  customizationChesse: boolean = false;
+  customizationTopings: boolean = false;
   //----------end-------------------
 
 
@@ -38,6 +38,8 @@ export class ChatComponent implements OnInit {
   CheckOrderStatusFlag: boolean = false;
   OrderStatusResponse: any;
   count: number = 0;
+  checkno: boolean = true;
+  checkNoCount: number = 0;
   //---------------end-------------------
 
   //variable for need help part
@@ -58,14 +60,14 @@ export class ChatComponent implements OnInit {
 
   //function to communicate the api to get the particular response
   chatCommunicate(question: any) {
-    if(question=="Crust Type"){
-      this.customizationCrust=true;
+    if (question == "Crust Type") {
+      this.customizationCrust = true;
     }
-    if(question=="Add extra Cheese"){
-      this.customizationChesse=true;
+    if (question == "Add extra Cheese") {
+      this.customizationChesse = true;
     }
-    if(question=="Toppings"){
-      this.customizationTopings=true;
+    if (question == "Toppings") {
+      this.customizationTopings = true;
     }
     this.chatService.communicate(question).subscribe(data => {
       this.test = data;
@@ -142,8 +144,8 @@ export class ChatComponent implements OnInit {
             console.log(resArray[i]);
             this.HowManyPizza = true;
           }
-          if(resArray[i].includes("Extra")){
-            this.cheeseName="Extra Cheese";
+          if (resArray[i].includes("Extra")) {
+            this.cheeseName = "Extra Cheese";
             this.anyThingExtra();
           }
 
@@ -161,12 +163,12 @@ export class ChatComponent implements OnInit {
               this.HowMany(document.getElementById(button.id).innerHTML);
             });
           }
-          else if(this.customizationCrust==true){
+          else if (this.customizationCrust == true) {
             button.addEventListener("click", () => {
               this.addCrust(document.getElementById(button.id).innerHTML);
             });
-          } 
-          else if(this.customizationTopings==true){
+          }
+          else if (this.customizationTopings == true) {
             button.addEventListener("click", () => {
               this.addTopings(document.getElementById(button.id).innerHTML);
             });
@@ -184,7 +186,7 @@ export class ChatComponent implements OnInit {
     console.log(this.test);
     console.log(this.test.response[0].reload);
     if (this.test.response[0].reload == "true") {
-      setTimeout(this.reload, 9000);
+      setTimeout(this.reload, 5000);
 
     }
   }
@@ -209,8 +211,8 @@ export class ChatComponent implements OnInit {
         maindiv.appendChild(cardDiv);
         const pizzaImg = document.createElement("img");
         pizzaImg.src = this.pizzaArray.response[i].pizza_pic;
-        pizzaImg.id = "pizzaImage"+i;
-        pizzaImg.className="pizzaImage";
+        pizzaImg.id = "pizzaImage" + i;
+        pizzaImg.className = "pizzaImage";
         cardDiv.appendChild(pizzaImg);
         const pname = document.createElement("p");
         pname.id = "pizzaName" + i;
@@ -218,8 +220,8 @@ export class ChatComponent implements OnInit {
         pname.innerText = this.pizzaArray.response[i].pizza_name;
         cardDiv.appendChild(pname);
 
-        const hr=document.createElement("hr");
-        hr.id="hr1";
+        const hr = document.createElement("hr");
+        hr.id = "hr1";
         cardDiv.appendChild(hr);
 
         const pabout = document.createElement("p");
@@ -227,26 +229,26 @@ export class ChatComponent implements OnInit {
         pabout.innerText = this.pizzaArray.response[i].special;
         cardDiv.appendChild(pabout);
 
-        const rateDiv=document.createElement("div");
-        rateDiv.id="rateDiv";
+        const rateDiv = document.createElement("div");
+        rateDiv.id = "rateDiv";
         cardDiv.appendChild(rateDiv);
 
         const prs = document.createElement("p");
         prs.id = "pizzarate";
-        prs.innerText ="Rs:-";
+        prs.innerText = "Rs:-";
         rateDiv.appendChild(prs);
 
 
         const prate = document.createElement("p");
-        prate.id = "pizzarate"+i;
-        prate.innerText =this.pizzaArray.response[i].rate;
+        prate.id = "pizzarate" + i;
+        prate.innerText = this.pizzaArray.response[i].rate;
         rateDiv.appendChild(prate);
 
         const selectButton = document.createElement("button");
         selectButton.id = "pizzaSelectButton";
-        selectButton.textContent="Select";
+        selectButton.textContent = "Select";
         selectButton.addEventListener("click", () => {
-          this.pizzaNameStoring(pname.id,prate.id,pizzaImg.src);
+          this.pizzaNameStoring(pname.id, prate.id, pizzaImg.src);
         });
         cardDiv.appendChild(selectButton);
       }
@@ -281,9 +283,9 @@ export class ChatComponent implements OnInit {
     if (this.CheckOrderStatusFlag == true || this.need_help == true) {
       this.CheckOrderSatus(question);
     }
-    else if(question.includes("who") || question.includes("you")){
+    else if (question.includes("who") || question.includes("you")) {
       this.chatCommunicate("about");
-      setTimeout(()=>{this.ngOnInit()},1000);
+      setTimeout(() => { this.ngOnInit() }, 1000);
     }
     else {
       if (this.bookingOrder == true && this.flag == 1) {
@@ -292,9 +294,17 @@ export class ChatComponent implements OnInit {
         this.takeOrderPhone();
       }
       else if (this.bookingOrder == true && this.flag == 2) {
-        this.phoneNumber = question;
-        this.flag = this.flag + 1;
-        this.takeOrderAddress();
+        this.checkno = this.phonenumberValidation(question);
+        if (this.checkno == true) {
+          
+          this.phoneNumber = question;
+          this.takeOrderAddress();
+          this.flag = this.flag + 1;
+        }
+        else {
+          this.takeOrderPhone();
+        }
+        console.log("check-------->");
       }
       else if (this.bookingOrder == true && this.flag == 3) {
         this.address = question;
@@ -350,25 +360,25 @@ export class ChatComponent implements OnInit {
   //method to take the order
   takeOrderName() {
     this.chatCommunicate("detail info");
-    this.bookingOrder=true;
-   // this.pizzaName = document.getElementById(id).innerHTML;
-   setTimeout(()=>{
-    const app = document.getElementById("chatBox");
+    this.bookingOrder = true;
+    // this.pizzaName = document.getElementById(id).innerHTML;
+    setTimeout(() => {
+      const app = document.getElementById("chatBox");
 
 
-    const maindiv = document.createElement("div");
-    maindiv.id = "maindiv";
-    app.appendChild(maindiv);
-    const img = document.createElement("img");
-    img.src = "../../assets/robot (1).png";
-    img.className = "botIcon";
-    maindiv.appendChild(img);
+      const maindiv = document.createElement("div");
+      maindiv.id = "maindiv";
+      app.appendChild(maindiv);
+      const img = document.createElement("img");
+      img.src = "../../assets/robot (1).png";
+      img.className = "botIcon";
+      maindiv.appendChild(img);
 
-    const p = document.createElement("p");
-    p.className = "botResponseCss";
-    p.textContent = "Please enter your Name";
-    maindiv.appendChild(p);
-   },3000);
+      const p = document.createElement("p");
+      p.className = "botResponseCss";
+      p.textContent = "Please enter your Name";
+      maindiv.appendChild(p);
+    }, 3000);
   }
 
   takeOrderPhone() {
@@ -377,7 +387,7 @@ export class ChatComponent implements OnInit {
 
     const maindiv = document.createElement("div");
     maindiv.id = "maindiv";
-    app.appendChild(maindiv);
+    
     const img = document.createElement("img");
     img.src = "../../assets/robot (1).png";
     img.className = "botIcon";
@@ -385,8 +395,23 @@ export class ChatComponent implements OnInit {
 
     const p = document.createElement("p");
     p.className = "botResponseCss";
-    p.textContent = "Please enter your phone no";
-    maindiv.appendChild(p);
+    if (this.checkno == true) {
+      app.appendChild(maindiv);
+      p.textContent = "Please enter your phone no";
+      maindiv.appendChild(p);
+    }
+    else {
+      if (this.checkNoCount <2) {
+        app.appendChild(maindiv);
+        p.textContent = "Please check your phone no and enter again";
+        this.checkNoCount = this.checkNoCount + 1;
+        maindiv.appendChild(p);
+      }
+      else {
+        this.chatCommunicate("sorry");
+      }
+    }
+    
   }
   takeOrderAddress() {
     const app = document.getElementById("chatBox");
@@ -414,7 +439,7 @@ export class ChatComponent implements OnInit {
 
   orderCompleted() {
     this.orderId = 'ORD' + Math.floor(Math.random() * 1000);
-    this.chatService.placeOrder(this.phoneNumber, this.Name, this.pizzaName, this.address, this.orderId,this.crustName,this.topings,this.cheeseName,this.totalAmount,this.img).subscribe(data => {
+    this.chatService.placeOrder(this.phoneNumber, this.Name, this.pizzaName, this.address, this.orderId, this.crustName, this.topings, this.cheeseName, this.totalAmount, this.img).subscribe(data => {
       console.log(data);
       this.orderThanks();
     })
@@ -450,12 +475,12 @@ export class ChatComponent implements OnInit {
     p0.textContent = "Order Placed Sucessfully!!";
     cardId.appendChild(p0);
 
-    const hr=document.createElement("hr");
-    hr.id="hr";
+    const hr = document.createElement("hr");
+    hr.id = "hr";
     cardId.appendChild(hr);
-    
-    const detailCard=document.createElement("div");
-    detailCard.id="detailcard";
+
+    const detailCard = document.createElement("div");
+    detailCard.id = "detailcard";
     cardId.appendChild(detailCard);
 
     const p4 = document.createElement("p");
@@ -463,7 +488,7 @@ export class ChatComponent implements OnInit {
     detailCard.appendChild(p4);
 
     const p5 = document.createElement("p");
-    p5.textContent = "Hi "+this.Name+",";
+    p5.textContent = "Hi " + this.Name + ",";
     detailCard.appendChild(p5);
 
     const p3 = document.createElement("p");
@@ -475,11 +500,11 @@ export class ChatComponent implements OnInit {
     detailCard.appendChild(p);
 
     const p6 = document.createElement("p");
-    p6.textContent = "Add on:-" + this.crustName+","+this.topings+","+this.cheeseName;
+    p6.textContent = "Add on:-" + this.crustName + "," + this.topings + "," + this.cheeseName;
     detailCard.appendChild(p6);
 
     const p7 = document.createElement("p");
-    p7.textContent = "Paid amount:-" +" Rs." +this.totalAmount;
+    p7.textContent = "Paid amount:-" + " Rs." + this.totalAmount;
     detailCard.appendChild(p7);
 
     const p1 = document.createElement("p");
@@ -489,6 +514,10 @@ export class ChatComponent implements OnInit {
     const p2 = document.createElement("p");
     p2.textContent = "Delivery Address:-" + this.address;
     detailCard.appendChild(p2);
+    setTimeout(() => {
+      this.chatCommunicate("thanks");
+    }, 4000);
+    
   }
 
   //function to check order status
@@ -652,8 +681,8 @@ export class ChatComponent implements OnInit {
     console.log(document.getElementById(id).innerHTML);
   }
 
-   //used for pizzabooking conversastion on base of value
-   userConversastionValue(value: any) {
+  //used for pizzabooking conversastion on base of value
+  userConversastionValue(value: any) {
     const app = document.getElementById("chatBox");
     //chat response div
     const userchatdiv = document.createElement("div");
@@ -674,45 +703,58 @@ export class ChatComponent implements OnInit {
   //this function is use to store the quantity of the pizza
   HowMany(quantity: any) {
     this.NoOfPizza = quantity;
-    console.log("no of pizza:-"+this.NoOfPizza);
-    console.log("pizza cost:-"+this.totalAmount);
-    this.totalAmount=parseInt(this.totalAmount)*this.NoOfPizza;
-    console.log("Total Amount:"+this.totalAmount);
+    console.log("no of pizza:-" + this.NoOfPizza);
+    console.log("pizza cost:-" + this.totalAmount);
+    this.totalAmount = parseInt(this.totalAmount) * this.NoOfPizza;
+    console.log("Total Amount:" + this.totalAmount);
     console.log(quantity);
     this.userConversastionValue(quantity)
     this.takeOrderName();
   }
 
   //this function is use to store the name of the pizzza
-  pizzaNameStoring(id:any,rateId:any,imgsrc:any){
-    const pizzaDiv=document.getElementById("cardPizzaDiv");
-    pizzaDiv.style.display="none";
-    this.pizzaName=document.getElementById(id).innerHTML;
-    console.log("Pizza name:"+this.pizzaName);
-    this.totalAmount=document.getElementById(rateId).innerHTML;
-    console.log("pizza rate:"+this.totalAmount);
-    this.img=imgsrc
-    console.log("Image:"+this.img);
+  pizzaNameStoring(id: any, rateId: any, imgsrc: any) {
+    const pizzaDiv = document.getElementById("cardPizzaDiv");
+    pizzaDiv.style.display = "none";
+    this.pizzaName = document.getElementById(id).innerHTML;
+    console.log("Pizza name:" + this.pizzaName);
+    this.totalAmount = document.getElementById(rateId).innerHTML;
+    console.log("pizza rate:" + this.totalAmount);
+    this.img = imgsrc
+    console.log("Image:" + this.img);
     this.chatUserRequestOption(id);
   }
 
   //method to add crust
   addCrust(crust: string) {
-    this.crustName=crust;
+    this.crustName = crust;
     this.userConversastionValue(crust);
-    this.customizationCrust=false;
-    console.log("crust name:"+this.crustName);
+    this.customizationCrust = false;
+    console.log("crust name:" + this.crustName);
     this.anyThingExtra();
   }
   addTopings(topings: string) {
-    this.topings=topings;
+    this.topings = topings;
     this.userConversastionValue(topings);
-    this.customizationTopings=false;
-    console.log("toping name:"+this.topings);
+    this.customizationTopings = false;
+    console.log("toping name:" + this.topings);
     this.anyThingExtra();
   }
 
-  anyThingExtra(){
+  anyThingExtra() {
     this.chatCommunicate("repeat question");
+  }
+
+  //phone no validator
+  phonenumberValidation(inputtxt: any) {
+    console.log("inside validator");
+    const phoneno: RegExp = /^\d{10}$/;
+
+    if (phoneno.test(inputtxt)) {
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 }
